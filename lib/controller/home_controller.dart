@@ -8,11 +8,13 @@ class HomeController extends ChangeNotifier {
   List<Book>? _bigViewBooks;
   List<Book>? _normalBooks;
   List<Book>? _premiumBooks;
+  List<Book>? topRatingBooks;
   bool _isLoading = false;
 
-
   List<Book>? get bigViewBooks => _bigViewBooks;
+
   List<Book>? get normalBooks => _normalBooks;
+
   List<Book>? get premiumBook => _premiumBooks;
 
   bool get isLoading => _isLoading;
@@ -21,16 +23,15 @@ class HomeController extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-
       //Call api lay du lieu sach
       _bigViewBooks = await _repository.findAll(limit, offset);
       _normalBooks = await _repository.findNormalBook(10, 0);
       _premiumBooks = await _repository.findPremiumBook(10, 0);
+      topRatingBooks = await _repository.findByTopRating(10, 0);
 
       //Cap nhat cho view
-      _isLoading=false;
+      _isLoading = false;
       notifyListeners();
-
     } catch (e) {
       _isLoading = false;
       notifyListeners();

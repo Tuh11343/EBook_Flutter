@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 
 import '../model/Favorite.dart';
 import '../utils/APIProvider.dart';
@@ -11,6 +12,17 @@ class FavoriteAPI {
       return response;
     } on DioException catch (e) {
       throw Exception('Failed to find by user id: $e');
+    }
+  }
+
+  Future<Response> findByBothID(int userID, int bookID) async {
+    try {
+      Response response = await ApiProvider.getInstance().get(
+          "/api/v1/favorite/bothID",
+          queryParameters: {"user_id": userID, "book_id": bookID});
+      return response;
+    } on DioException catch (e) {
+      throw Exception('Failed to find favorite by both id: $e');
     }
   }
 

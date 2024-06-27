@@ -1,18 +1,22 @@
-import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:ebook/controller/detail_book_controller.dart';
+import 'package:ebook/controller/detail_book_controller_2.dart';
+import 'package:ebook/controller/favoriteController.dart';
 import 'package:ebook/utils/app_color.dart';
 import 'package:ebook/widgets/custom_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../app_instance.dart';
+import '../constant.dart';
 import '../controller/audio_controller.dart';
-import '../model/Author.dart';
+import '../controller/main_wrapper_controller.dart';
 import '../model/Book.dart';
+import '../widgets/same_author.dart';
 
 class DetailBookView extends StatefulWidget {
   Book book;
@@ -26,68 +30,74 @@ class DetailBookView extends StatefulWidget {
 }
 
 class DetailBookViewState extends State<DetailBookView> {
+  int? _userID;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      Provider.of<DetailBookController>(context, listen: false)
-          .init(widget.book);
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      //Get account and other information
+      var mainWrapperController =
+          Provider.of<MainWrapperController>(context, listen: false);
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      int accountID = prefs.getInt(AppInstance().accountID) ?? -1;
+      if (accountID == -1) {
+        messageSnackBar(context, 'Có lỗi xảy ra khi tìm kiếm tài khoản');
+        return;
+      }
+      await mainWrapperController.findAccountByID(accountID);
+      _userID = mainWrapperController.currentUser!.id!;
+
+      var detailBookController =
+          Provider.of<DetailBookController2>(context, listen: false);
+      detailBookController.init(_userID ?? -1, widget.book);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DetailBookController>(
-      builder: (context, controller, child) {
-        return PopScope(
-          canPop: false,
-          onPopInvoked: (didPop) {
-            controller.backPressEvent();
-            Navigator.of(context).pop();
-          },
-          child: Scaffold(
-            extendBodyBehindAppBar: false,
-            body: Container(
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                colors: [AppColors.blue, Colors.blueGrey.withOpacity(1)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              )),
-              child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: Column(
+    return Scaffold(
+      extendBodyBehindAppBar: false,
+      body: Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+          colors: [AppColors.blue, Colors.blueGrey.withOpacity(1)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        )),
+        child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsetsDirectional.all(20),
+                  child: Row(
                     children: [
-                      Padding(
-                        padding: const EdgeInsetsDirectional.all(20),
-                        child: Row(
-                          children: [
-                            IconButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                icon: const Icon(
-                                  Icons.arrow_back,
-                                  color: Colors.white,
-                                  size: 25,
-                                )),
-                          ],
-                        ),
-                      ),
-                      FirstPart(
-                        widget: widget,
-                        controller: controller,
-                      ),
-                      SecondPart(
-                        widget: widget,
-                        controller: controller,
-                      ),
+                      IconButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 25,
+                          )),
                     ],
-                  )),
-            ),
-          ),
-        );
-      },
+                  ),
+                ),
+                FirstPart(
+                  widget: widget,
+                  controller:
+                      Provider.of<DetailBookController2>(context, listen: true),
+                  userID: _userID,
+                ),
+                SecondPart(
+                  widget: widget,
+                  controller: Provider.of<DetailBookController2>(context,listen: true),
+                ),
+              ],
+            )),
+      ),
     );
   }
 }
@@ -97,17 +107,17 @@ class FirstPart extends StatelessWidget {
     super.key,
     required this.widget,
     required this.controller,
+    this.userID,
   });
 
   final DetailBookView widget;
-  final DetailBookController controller;
+  final DetailBookController2 controller;
+  final int? userID;
 
   @override
   Widget build(BuildContext context) {
     if (controller.isLoading) {
-      return CircularProgressIndicator();
-    } else if (controller.authorList.isEmpty) {
-      return Text('Khong co du lieu tac gia');
+      return const CircularProgressIndicator();
     } else {
       return Padding(
         padding:
@@ -137,25 +147,31 @@ class FirstPart extends StatelessWidget {
             const SizedBox(
               height: 10,
             ),
-            GestureDetector(
-              onTap: () {
-                context.push('/home/detailBook/author',
-                    extra: controller.authorList.last![0]);
-              },
-              child:
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                CustomText(
-                    text: controller.authorList.last![0].name,
-                    textSize: 16,
-                    style: Style.normal,
-                    textColor: Colors.white),
-                const Icon(Icons.arrow_right_sharp,
-                    size: 25, color: Colors.white),
-              ]),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
+            //Kiểm tra xem danh sách tác giả có trống không hiển thị
+            if(controller.authorList.isNotEmpty)...[
+              Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      context.push('/author', extra: controller.authorList[0]);
+                    },
+                    child:
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      CustomText(
+                          text: controller.authorList[0].name,
+                          textSize: 16,
+                          style: Style.normal,
+                          textColor: Colors.white),
+                      const Icon(Icons.arrow_right_sharp,
+                          size: 25, color: Colors.white),
+                    ]),
+                  ),
+                  const SizedBox(height: 10,),
+                ],
+              ),
+            ],
+
+            //Phần này hiển thị rating
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -177,29 +193,74 @@ class FirstPart extends StatelessWidget {
             const SizedBox(
               height: 10,
             ),
+
+            //Phần này xử lý nhấn chọn yêu thích
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                if (1 == 2)
+                if (!controller.isFavorite)
                   IconButton(
-                      onPressed: () {
-                        //Them vao yeu thich
-                      },
-                      icon: const Icon(
-                        Icons.favorite_sharp,
-                        color: Colors.white,
-                        size: 25,
-                      ))
-                else
-                  IconButton(
-                      onPressed: () {
-                        //Bo yeu thich
+                      onPressed: () async {
+                        try {
+                          if (userID != null) {
+                            var result = await controller.favoriteClick(
+                                userID!, widget.book.id!);
+                            if (result) {
+                              messageSnackBar(context,
+                                  'Thêm vào danh sách yêu thích thành công');
+
+                              //Call Api to update favorite list
+                              Provider.of<FavoriteController>(context,
+                                      listen: false)
+                                  .favoriteListChanged(userID!, 5, 0);
+                            } else {
+                              messageSnackBar(context, 'Có lỗi xảy ra');
+                            }
+                          }
+                        } catch (e) {
+                          debugPrint(
+                              'Error from view detail book favorite click:${e}');
+                          messageSnackBar(context, 'Có lỗi xảy ra');
+                        }
                       },
                       icon: const Icon(
                         Icons.favorite_border_sharp,
                         color: Colors.white,
                         size: 25,
+                      ))
+                else
+                  IconButton(
+                      onPressed: () async {
+                        //Unfavorite
+                        try {
+                          if (userID != null) {
+                            var result = await controller.favoriteClick(
+                                userID!, widget.book.id!);
+                            if (result) {
+                              messageSnackBar(context,
+                                  'Loại khỏi danh sách yêu thích thành công');
+
+                              //Call Api to update favorite list
+                              Provider.of<FavoriteController>(context,
+                                      listen: false)
+                                  .favoriteListChanged(userID!, 5, 0);
+                            } else {
+                              messageSnackBar(context, 'Có lỗi xảy ra');
+                            }
+                          }
+                        } catch (e) {
+                          debugPrint(
+                              'Error from view detail book favorite click:${e}');
+                          messageSnackBar(context, 'Có lỗi xảy ra');
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.favorite_sharp,
+                        color: Colors.white,
+                        size: 25,
                       )),
+
+                //Phần này xử lý nghe nhạc
                 Expanded(
                   child: Container(
                     padding: const EdgeInsetsDirectional.all(5),
@@ -209,17 +270,19 @@ class FirstPart extends StatelessWidget {
                     ),
                     child: GestureDetector(
                       onTap: () {
-                        //Di den audio view
+                        //Đi đến audio view
 
                         AudioController audioController =
                             Provider.of<AudioController>(context,
                                 listen: false);
                         audioController.setAudioContent(
-                            widget.book.name,
-                            controller.authorList.last![0].name,
-                            widget.book.image);
+                          widget.book,
+                          controller.authorList.isNotEmpty
+                              ? controller.authorList[0].name
+                              : 'Không rõ',
+                        );
                         audioController.resetAudio(widget.book.src_audio!);
-                        context.push('/home/detailBook/audio');
+                        context.push('/songControl');
                       },
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -259,112 +322,111 @@ class SecondPart extends StatelessWidget {
   });
 
   final DetailBookView widget;
-  final DetailBookController controller;
+  final DetailBookController2 controller;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-          ),
-          child: Padding(
-            padding: const EdgeInsetsDirectional.all(20),
-            child: Column(
-              children: [
-                const Align(
-                  alignment: Alignment.topLeft,
-                  child: Text(
+    if (controller.isLoading) {
+      return const CircularProgressIndicator();
+    } else {
+      return Column(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+            ),
+            child: Padding(
+              padding: const EdgeInsetsDirectional.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
                     "Giới thiệu nội dung",
                     style: TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
                         fontSize: 20),
                   ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                ReadMoreText(
-                  widget.book.description.toString(),
-                  style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.normal,
-                      color: Colors.black),
-                  textAlign: TextAlign.left,
-                  trimMode: TrimMode.Line,
-                  trimLines: 5,
-                  colorClickableText: Colors.pink,
-                  trimCollapsedText: 'Xem thêm',
-                  trimExpandedText: 'Hiển thị ít hơn',
-                  moreStyle: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: controller.genreList.isNotEmpty &&
-                          controller.genreList.last != null
-                      ? SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: List.generate(
-                                controller.genreList.last!.length, (index) {
-                              return Container(
-                                padding: const EdgeInsets.all(10),
-                                margin: const EdgeInsets.only(right: 20),
-                                decoration: BoxDecoration(
-                                  color: AppColors.gray80,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  controller.genreList.last![index].name,
-                                  style: const TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.normal,
-                                      fontSize: 16),
-                                ),
-                              );
-                            }),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  ReadMoreText(
+                    widget.book.description?.toString() ??
+                        'Không có thông tin chi tiết',
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.black),
+                    textAlign: TextAlign.left,
+                    trimMode: TrimMode.Line,
+                    trimLines: 5,
+                    colorClickableText: Colors.pink,
+                    trimCollapsedText: 'Xem thêm',
+                    trimExpandedText: 'Hiển thị ít hơn',
+                    moreStyle: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children:
+                          List.generate(controller.genreList.length, (index) {
+                        return Container(
+                          padding: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.only(right: 20),
+                          decoration: BoxDecoration(
+                            color: AppColors.gray80,
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                const Divider(height: 10, color: Colors.black, thickness: 0.5),
-                ThirdPart(
-                  widget: widget,
-                  controller: controller,
-                ),
-              ],
+                          child: Text(
+                            controller.genreList[index].name,
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.normal,
+                                fontSize: 16),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                  // : const SizedBox.shrink(),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  const Divider(
+                      height: 10, color: Colors.black, thickness: 0.5),
+                  if (controller.authorList.isNotEmpty) ...[
+                    ThirdPart(
+                      widget: widget,
+                      controller: controller,
+                    ),
+                  ]
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    }
   }
 }
 
 class ThirdPart extends StatelessWidget {
   final DetailBookView widget;
-  final DetailBookController controller;
+  final DetailBookController2 controller;
 
   const ThirdPart({super.key, required this.widget, required this.controller});
 
   @override
   Widget build(BuildContext context) {
     if (controller.isLoading) {
-      return CircularProgressIndicator();
-    } else if (controller.authorBookList.isEmpty) {
-      return Text('Khong co du lieu');
+      return const CircularProgressIndicator();
     } else {
       return Column(
         children: [
@@ -385,118 +447,10 @@ class ThirdPart extends StatelessWidget {
             height: 20,
           ),
           SameAuthor(
-              author: controller.authorList[0].last,
-              bookList: controller.authorBookList[0].last!),
+              author: controller.authorList[0],
+              bookList: controller.authorBookList[0]),
         ],
       );
     }
-  }
-}
-
-class SameAuthor extends StatefulWidget {
-  Author author;
-  List<Book> bookList;
-
-  SameAuthor({super.key, required this.author, required this.bookList});
-
-  @override
-  State<StatefulWidget> createState() {
-    return SameAuthorState();
-  }
-}
-
-class SameAuthorState extends State<SameAuthor> {
-  int _selectedIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        context.push('/home/detailBook/author', extra: widget.author);
-      },
-      child: Column(children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            ClipOval(
-              child: CachedNetworkImage(
-                height: 80,
-                width: 80,
-                imageUrl: widget.author.image,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(
-              width: 20,
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Align(
-                  alignment: Alignment.topLeft,
-                  child: Text(
-                    'Cùng tác giả',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                Text(
-                  widget.author.name,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const Icon(
-              Icons.arrow_right_rounded,
-              color: Colors.black,
-              size: 50,
-            ),
-          ],
-        ),
-        const SizedBox(
-          height: 20,
-        ),
-        CarouselSlider.builder(
-            itemCount: widget.bookList.length,
-            itemBuilder: (context, index, realIndex) {
-              return GestureDetector(
-                onTap: () {
-                  context.push("/home/detailBook",
-                      extra: widget.bookList[index]);
-                },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: CachedNetworkImage(
-                    imageUrl: widget.bookList[index]!.image!,
-                  ),
-                ),
-              );
-            },
-            options: CarouselOptions(
-              scrollDirection: Axis.horizontal,
-              height: 200,
-              scrollPhysics: const BouncingScrollPhysics(),
-              enableInfiniteScroll: false,
-              viewportFraction: 0.4,
-              padEnds: false,
-              enlargeCenterPage: false,
-              initialPage: _selectedIndex,
-              onPageChanged: (index, reason) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-            )),
-      ]),
-    );
   }
 }

@@ -1,8 +1,3 @@
-
-
-
-import 'package:flutter/cupertino.dart';
-
 class Author{
   int? id;
   String name;
@@ -21,5 +16,14 @@ class Author{
 
   static String getAuthorName(Map<String,dynamic> json){
     return json['author'] as String;
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
+      'name': name,
+      'image': image,
+      'description':description
+    };
   }
 }

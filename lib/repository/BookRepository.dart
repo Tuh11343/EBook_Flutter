@@ -1,30 +1,28 @@
 import 'package:ebook/model/Book.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:ebook/response/load_more.dart';
 
 import '../api/BookAPI.dart';
 
-
-class BookRepository{
-
+class BookRepository {
   final BookAPI apiService = BookAPI();
 
-  Future<List<Book>> findAll(int? limit,int? offset) async {
-    final response = await apiService.findAll(limit,offset);
+  Future<List<Book>> findAll(int? limit, int? offset) async {
+    final response = await apiService.findAll(limit, offset);
     List<dynamic> data = response.data['books'];
     List<Book> books = data.map((json) => Book.fromJson(json)).toList();
     return books;
   }
 
-  Future<List<Book>> findNormalBook(int? limit,int? offset) async {
+  Future<List<Book>> findNormalBook(int? limit, int? offset) async {
     final response = await apiService.findNormal(limit, offset);
     List<dynamic> data = response.data['books'];
     List<Book> books = data.map((json) => Book.fromJson(json)).toList();
     return books;
   }
 
-  Future<List<Book>?> findPremiumBook(int? limit,int? offset) async {
+  Future<List<Book>?> findPremiumBook(int? limit, int? offset) async {
     final response = await apiService.findPremium(limit, offset);
-    if(response.data['books']!=null){
+    if (response.data['books'] != null) {
       List<dynamic> data = response.data['books'];
       List<Book> books = data.map((json) => Book.fromJson(json)).toList();
       return books;
@@ -32,9 +30,10 @@ class BookRepository{
     return null;
   }
 
-  Future<List<Book>> findByAuthorID(int authorID,int? limit,int? offset) async {
+  Future<List<Book>> findByAuthorID(
+      int authorID, int? limit, int? offset) async {
     final response = await apiService.findByAuthorID(authorID, limit, offset);
-    if(response.data['books']!=null){
+    if (response.data['books'] != null) {
       List<dynamic> data = response.data['books'];
       List<Book> books = data.map((json) => Book.fromJson(json)).toList();
       return books;
@@ -42,44 +41,56 @@ class BookRepository{
     return List.empty();
   }
 
-  Future<List<Book>?> findByFavorite(int id) async {
-    final response = await apiService.findByFavorite(id);
-    if(response.data['books']!=null){
+  Future<LoadMoreResponse> findByFavorite(
+      int userID, int? limit, int? offset) async {
+    final response = await apiService.findByFavorite(userID, limit, offset);
+    LoadMoreResponse dataResponse =
+        LoadMoreResponse(bookList: [], maxLength: -1);
+    if (response.data['books'] != null && response.data['length'] != null) {
       List<dynamic> data = response.data['books'];
       List<Book> books = data.map((json) => Book.fromJson(json)).toList();
-      return books;
+      dataResponse.bookList = books;
+      dataResponse.maxLength = response.data['length'];
     }
-    return null;
+    return dataResponse;
   }
 
-  Future<List<Book>?> findByNameAndGenre(String name,int genreID,int? limit,int? offset) async {
-    final response = await apiService.findByNameAndGenre(name, genreID, limit, offset);
-    if(response.data['books']!=null){
+  Future<LoadMoreResponse> findByNameAndGenre(
+      String name, int genreID, int? limit, int? offset) async {
+    final response =
+        await apiService.findByNameAndGenre(name, genreID, limit, offset);
+    LoadMoreResponse dataResponse =
+        LoadMoreResponse(bookList: [], maxLength: -1);
+    if (response.data['books'] != null && response.data['length'] != null) {
       List<dynamic> data = response.data['books'];
       List<Book> books = data.map((json) => Book.fromJson(json)).toList();
-      return books;
+      dataResponse.bookList = books;
+      dataResponse.maxLength = response.data['length'];
     }
-    return null;
+    return dataResponse;
   }
 
-  Future<List<Book>?> findByName(String name,int? limit,int? offset) async {
+  Future<LoadMoreResponse> findByName(
+      String name, int? limit, int? offset) async {
     final response = await apiService.findByName(name, limit, offset);
-    if(response.data['books']!=null){
+    LoadMoreResponse dataResponse =
+        LoadMoreResponse(bookList: [], maxLength: -1);
+    if (response.data['books'] != null && response.data['length'] != null) {
       List<dynamic> data = response.data['books'];
       List<Book> books = data.map((json) => Book.fromJson(json)).toList();
-      return books;
+      dataResponse.bookList = books;
+      dataResponse.maxLength = response.data['length'];
     }
-    return null;
+    return dataResponse;
   }
 
-  Future<List<Book>?> findByTopRating(int? limit,int? offset) async {
+  Future<List<Book>?> findByTopRating(int? limit, int? offset) async {
     final response = await apiService.findByTopRating(limit, offset);
-    if(response.data['books']!=null){
+    if (response.data['books'] != null) {
       List<dynamic> data = response.data['books'];
       List<Book> books = data.map((json) => Book.fromJson(json)).toList();
       return books;
     }
     return null;
   }
-
 }

@@ -46,31 +46,39 @@ class BookAPI {
     }
   }
 
-  Future<Response> findByFavorite(int id) async {
+  Future<Response> findByFavorite(
+      int userID, int? limit, int? offset) async {
     try {
       Response response = await ApiProvider.getInstance().get(
-        "/api/v1/book/favorite",
-      );
+          "/api/v1/book/favorite",
+          queryParameters: {"limit": limit, "offset": offset,"userID":userID});
       return response;
     } on DioException catch (e) {
       throw Exception('Failed to get data: $e');
     }
   }
 
-  Future<Response> findByNameAndGenre(String name,int genreID,int? limit, int? offset) async {
+  Future<Response> findByNameAndGenre(
+      String name, int genreID, int? limit, int? offset) async {
     try {
-      Response response = await ApiProvider.getInstance().get("/api/v1/book/nameAndGenre",
-          queryParameters: {"name":name,"genre_id":genreID,"limit": limit, "offset": offset});
+      Response response = await ApiProvider.getInstance()
+          .get("/api/v1/book/nameAndGenre", queryParameters: {
+        "name": name,
+        "genre_id": genreID,
+        "limit": limit,
+        "offset": offset
+      });
       return response;
     } on DioException catch (e) {
       throw Exception('Failed to get data: $e');
     }
   }
 
-  Future<Response> findByName(String name,int? limit, int? offset) async {
+  Future<Response> findByName(String name, int? limit, int? offset) async {
     try {
-      Response response = await ApiProvider.getInstance().get("/api/v1/book/name",
-          queryParameters: {"name":name,"limit": limit, "offset": offset});
+      Response response = await ApiProvider.getInstance().get(
+          "/api/v1/book/name",
+          queryParameters: {"name": name, "limit": limit, "offset": offset});
       return response;
     } on DioException catch (e) {
       throw Exception('Failed to get data: $e');
@@ -79,7 +87,8 @@ class BookAPI {
 
   Future<Response> findByTopRating(int? limit, int? offset) async {
     try {
-      Response response = await ApiProvider.getInstance().get("/api/v1/book/topRating",
+      Response response = await ApiProvider.getInstance().get(
+          "/api/v1/book/topRating",
           queryParameters: {"limit": limit, "offset": offset});
       return response;
     } on DioException catch (e) {

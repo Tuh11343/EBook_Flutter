@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:ebook/utils/APIProvider.dart';
 
 class PaymentAPI {
-  Future<Response> paymentRequest(int accountID, Float total) async {
+  Future<Response> paymentRequest(int accountID, double total) async {
     try {
       Response response = await ApiProvider.getInstance().post(
           "/api/v1/payment",

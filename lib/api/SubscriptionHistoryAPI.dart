@@ -29,7 +29,7 @@ class SubscriptionHistoryAPI {
   Future<Response> create(SubscriptionHistory subscriptionHistory) async {
     try {
       Response response = await ApiProvider.getInstance()
-          .post("/api/v1/subscriptionHistory", data: subscriptionHistory);
+          .post("/api/v1/subscriptionHistory", data: subscriptionHistory.toJson());
       return response;
     } on DioException catch (e) {
       throw Exception('Failed to get data: $e');
@@ -39,7 +39,7 @@ class SubscriptionHistoryAPI {
   Future<Response> update(SubscriptionHistory subscriptionHistory) async {
     try {
       Response response = await ApiProvider.getInstance()
-          .put("/api/v1/subscriptionHistory", data: subscriptionHistory);
+          .put("/api/v1/subscriptionHistory", data: subscriptionHistory.toJson());
       return response;
     } on DioException catch (e) {
       throw Exception('Failed to get data: $e');

@@ -38,7 +38,7 @@ class AccountAPI {
 
   Future<Response> createAccount(Account account) async{
     try{
-      Response response = await ApiProvider.getInstance().post("/api/v1/account",data: account);
+      Response response = await ApiProvider.getInstance().post("/api/v1/account",data: account.toJson());
       return response;
     }on DioException catch(e){
       throw Exception('Failed to create account: $e');

@@ -43,7 +43,7 @@ class _BigBookWidgetState extends State<BigBookWidget> {
             itemBuilder: (context, index, realIndex) {
               return GestureDetector(
                 onTap: () {
-                  context.push("/home/detailBook",extra: controller.bigViewBooks![index]);
+                  context.push("/detailBook",extra: controller.bigViewBooks![index]);
                 },
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 15),
@@ -51,15 +51,18 @@ class _BigBookWidgetState extends State<BigBookWidget> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
-                        child: CachedNetworkImage(
-                          fit: BoxFit.cover,
-                          imageUrl: controller.bigViewBooks![index].image ?? "",
-                          progressIndicatorBuilder:
-                              (context, url, downloadProgress) =>
-                              CircularProgressIndicator(
-                                  value: downloadProgress.progress),
-                          errorWidget: (context, url, error) =>
-                          const Icon(Icons.error),
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.all(Radius.circular(20)),
+                          child: CachedNetworkImage(
+                            fit: BoxFit.cover,
+                            imageUrl: controller.bigViewBooks![index].image ?? "",
+                            progressIndicatorBuilder:
+                                (context, url, downloadProgress) =>
+                                CircularProgressIndicator(
+                                    value: downloadProgress.progress),
+                            errorWidget: (context, url, error) =>
+                            const Icon(Icons.error),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -75,11 +78,12 @@ class _BigBookWidgetState extends State<BigBookWidget> {
               );
             },
             options: CarouselOptions(
-              height: 270,
+              height: 320,
               initialPage: _activeIndex,
               enlargeCenterPage: true,
-              viewportFraction: 0.5,
+              viewportFraction: 0.55,
               enableInfiniteScroll: true,
+              enlargeFactor: 0.2,
               scrollPhysics: const BouncingScrollPhysics(),
               onPageChanged: (index, reason) {
                 setState(() {

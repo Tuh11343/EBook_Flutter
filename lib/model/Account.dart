@@ -1,4 +1,3 @@
-import 'dart:ffi';
 
 class Account {
   int? id;
@@ -24,5 +23,16 @@ class Account {
         email: json['email'],
         password: json['email'],
         is_verified: json['is_verified']);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
+      'user_id': user_id,
+      'subscription_id': subscription_id,
+      'email': email,
+      'password': password,
+      'is_verified': is_verified,
+    };
   }
 }

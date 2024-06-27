@@ -1,5 +1,6 @@
 import 'package:ebook/api/UserAPI.dart';
 import 'package:ebook/model/User.dart';
+import 'package:flutter/cupertino.dart';
 
 class UserRepository {
   final UserAPI apiService = UserAPI();
@@ -23,7 +24,7 @@ class UserRepository {
   Future<User?> findByAccountID(int accountID) async {
     final response = await apiService.findByAccountID(accountID);
     if (response.data['user'] != null) {
-      return User.fromJson(response.data['subscription']);
+      return User.fromJson(response.data['user']);
     }
     return null;
   }

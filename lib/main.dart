@@ -1,13 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:ebook/controller/HomeAuthorController.dart';
+import 'package:ebook/firebase_options.dart';
 import 'package:ebook/utils/app_navigation.dart';
 import 'package:ebook/widgets/custom_text.dart';
-import 'package:ebook/views/main_wrapper.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
   runApp(const MyApp());
 }
 

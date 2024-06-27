@@ -27,7 +27,7 @@ class UserAPI {
   Future<Response> createUser(User user) async {
     try {
       Response response =
-          await ApiProvider.getInstance().post("/api/v1/user", data: user);
+          await ApiProvider.getInstance().post("/api/v1/user", data: user.toJson());
       return response;
     } on DioException catch (e) {
       throw Exception('Failed to get data: $e');

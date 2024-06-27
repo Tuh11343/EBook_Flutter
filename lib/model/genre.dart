@@ -1,10 +1,10 @@
 
 class Genre {
-  int id;
+  int? id;
   String name;
   String? image;
 
-  Genre({required this.id, required this.name,this.image});
+  Genre({this.id, required this.name,this.image});
 
   factory Genre.fromJson(Map<String, dynamic> json) {
     return Genre(

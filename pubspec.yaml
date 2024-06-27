@@ -37,8 +37,7 @@ dependencies:
 
 
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+
   cupertino_icons: ^1.0.2
   http: ^1.2.0
   carousel_slider: ^4.2.1
@@ -52,6 +51,20 @@ dependencies:
   audio_session: ^0.1.19
   readmore: ^3.0.0
   back_button_interceptor: ^7.0.3
+  flutter_swipe_detector: ^2.0.0
+  loadmore: ^2.1.0
+  sqflite: ^2.3.2
+  shared_preferences: ^2.2.3
+  firebase_auth: ^4.17.8
+  firebase_core: ^2.27.0
+  google_sign_in: ^6.2.1
+  fluttertoast: ^8.2.5
+  url_launcher: ^6.3.0
+  share_plus: ^7.2.2
+  flutter_stripe: ^9.4.0
+  intl: ^0.19.0
+  scrollable_positioned_list: ^0.3.8
+
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +76,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
+  build_runner: ^2.4.9
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -78,6 +92,16 @@ flutter:
 
   assets:
     - assets/images/song.jpg
+    - assets/icons/icon_filter_64.png
+    - assets/icons/icon_sort_50.png
+    - assets/icons/icon_person_64.png
+    - assets/icons/icon_google_48.png
+    - assets/icons/icon_email_100.png
+    - assets/icons/icon_lock_50.png
+    - assets/icons/icon_phone_number_50.png
+    - assets/icons/icon_prefix_person_64.png
+    - assets/icons/icon_book_100.png
+    - assets/icons/icon_bookmark_64.png
 
 
 

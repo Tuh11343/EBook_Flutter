@@ -1,15 +1,15 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 
+import '../model/Book.dart';
 import '../utils/audio_handler.dart';
 
 class AudioController extends ChangeNotifier {
   AudioPlayerHandler? audioPlayerHandler;
   bool newAudioPlaying = false;
 
-  String audioTitle = '';
+  Book? audioBook;
   String audioAuthor = '';
-  String audioImageURL = '';
 
   Future<void> resetAudio(String audioUrl) async {
     newAudioPlaying = true;
@@ -18,7 +18,7 @@ class AudioController extends ChangeNotifier {
         builder: () => AudioPlayerHandler(
             audioUrl: audioUrl,
             audioAuthor: audioAuthor,
-            audioTitle: audioTitle),
+            audioTitle: audioBook?.name??'Không rõ'),
         config: const AudioServiceConfig(
           androidNotificationChannelId: 'com.example.app.ebook.audio',
           androidNotificationChannelName: 'Audio Playback',
@@ -26,17 +26,16 @@ class AudioController extends ChangeNotifier {
         ),
       );
     } else {
-      audioPlayerHandler!.reset(audioUrl);
+      await audioPlayerHandler!.reset(audioUrl);
     }
     newAudioPlaying = false;
 
     notifyListeners();
   }
 
-  void setAudioContent(String title, String album, String? imageURL) {
-    audioTitle = title;
-    audioAuthor = album;
-    audioImageURL = imageURL ?? '';
+  void setAudioContent(Book book,String? authorName) {
+    audioBook=book;
+    audioAuthor = authorName??'Không rõ';
     notifyListeners();
   }
 }

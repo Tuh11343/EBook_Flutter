@@ -13,4 +13,12 @@ class Favorite {
   static bool getFavoriteAction(Map<String,dynamic> json){
     return json['action'] as bool;
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
+      'book_id': book_id,
+      'user_id': user_id,
+    };
+  }
 }

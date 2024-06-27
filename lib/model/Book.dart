@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 class Book {
   int? id;
   String name;
@@ -39,6 +41,24 @@ class Book {
       lyric: json['lyric']
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'rating': rating,
+      'progress': progress,
+      'published_year': published_year,
+      'image': image,
+      'language': language,
+      'book_type': book_type == BookType.NORMAL ? 'NORMAL' : 'PREMIUM',
+      'src_audio': src_audio,
+      'lyric': lyric,
+    };
+  }
+
+
 }
 
 enum BookType { NORMAL, PREMIUM }
